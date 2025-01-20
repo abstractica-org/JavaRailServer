@@ -13,17 +13,19 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 {
 	//Commands for locomotives
 	private final static int COMMAND_IDENTIFY = 1000;
-	private final static int COMMAND_MOVE_FORWARD = 1001;
-	private final static int COMMAND_MOVE_BACKWARD = 1002;
-	private final static int COMMAND_EMERGENCY_BRAKE = 1003;
+	private final static int COMMAND_MOVE = 1001;
+	private final static int COMMAND_DIRECTION = 1002;
 	private final static int COMMAND_DISTANCE_TO_GOAL = 2000;
+	private final static int COMMAND_STOPPED = 2001;
 
 	private final Device device;
 
 	private final String name;
 	private volatile int distanceToGoal;
 	private volatile boolean dtgOK;
+	private volatile boolean isStopped;
 	private final Object dtgLock;
+	private final Object isStoppedLock;
 
 	LocomotiveImpl(String name, Device device)
 	{
@@ -33,6 +35,8 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 		distanceToGoal = 0;
 		dtgOK = true;
 		dtgLock = new Object();
+		isStopped = true;
+		isStoppedLock = new Object();
 	}
 
 	private Collection<DistanceToGoalListener> listeners;
@@ -52,34 +56,59 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 	}
 
 	@Override
-	public boolean move(Direction dir, int maxSpeed, int magnets) throws InterruptedException
+	public boolean move(int blocks) throws InterruptedException
 	{
-		if(magnets < 0 || magnets > 65535 || maxSpeed < 0 || maxSpeed > 100)
+		if(blocks < 0 || blocks > 1000)
 		{
 			throw new IllegalArgumentException("Illegal move command!");
 		}
+		if(blocks == 0) return true;
+		synchronized (isStoppedLock)
+		{
+			isStopped = false;
+			isStoppedLock.notifyAll();
+		}
 		dtgOK = false;
-		int command = (dir == Direction.FORWARD) ? COMMAND_MOVE_FORWARD : COMMAND_MOVE_BACKWARD;
-		Response response = device.sendPacket(command, maxSpeed, magnets,null, true, false);
+		Response response = device.sendPacket(COMMAND_MOVE, blocks, 0,null, true, false);
 		if(response == null) return false;
 		return response.getResponse() == 0;
 	}
 
 	@Override
-	public boolean moveAndWait(Direction dir, int maxSpeed, int magnets) throws InterruptedException
+	public boolean moveAndWait(int blocks) throws InterruptedException
 	{
-		boolean res = move(dir, maxSpeed, magnets);
+		boolean res = move(blocks);
 		if(res)
 		{
 			waitWhileDistanceToGoalGreaterThan(0);
 		}
+		waitForTrainToStop();
 		return res;
 	}
 
 	@Override
-	public boolean emergencyBrake() throws InterruptedException
+	public boolean setDirection(Direction direction) throws InterruptedException
 	{
-		Response response = device.sendPacket(COMMAND_EMERGENCY_BRAKE, 0, 0, null, true, false);
+		if(!isStopped)
+		{
+			return false;
+		}
+		Response response = device.sendPacket(COMMAND_DIRECTION, direction.ordinal(), 0, null, true, false);
+		if(response == null) return false;
+		return response.getResponse() == 0;
+	}
+
+	@Override
+	public boolean waitForTrainToStopAndSetDirection(Direction direction) throws InterruptedException
+	{
+		synchronized (isStoppedLock)
+		{
+			while(!isStopped)
+			{
+				isStoppedLock.wait();
+			}
+		}
+		Response response = device.sendPacket(COMMAND_DIRECTION, direction.ordinal(), 0, null, true, false);
 		if(response == null) return false;
 		return response.getResponse() == 0;
 	}
@@ -115,11 +144,32 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 	}
 
 	@Override
+	public void waitForTrainToStop() throws InterruptedException
+	{
+		synchronized (isStoppedLock)
+		{
+			while(!isStopped)
+			{
+				isStoppedLock.wait();
+			}
+		}
+	}
+
+	@Override
 	public int onPacket(int command, int arg1, int arg2, byte[] load)
 	{
 		if(command == COMMAND_DISTANCE_TO_GOAL)
 		{
 			updateDistanceToGoal(arg1);
+			return 0;
+		}
+		if(command == COMMAND_STOPPED)
+		{
+			synchronized (isStoppedLock)
+			{
+				isStopped = true;
+				isStoppedLock.notifyAll();
+			}
 			return 0;
 		}
 		throw new IllegalStateException("Unknown command: " + command);

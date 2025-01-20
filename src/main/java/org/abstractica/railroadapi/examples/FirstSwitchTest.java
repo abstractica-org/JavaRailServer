@@ -12,7 +12,7 @@ public class FirstSwitchTest
 	public static void main(String[] args) throws SocketException, UnknownHostException, InterruptedException
 	{
 		RailroadAPI api = new RailroadAPIImpl();
-		Switch sw1 = api.createSwitch("Switch 1", Switch.Side.LEFT,13502446);
+		Switch sw1 = api.createSwitch("Switch 1", Switch.Side.LEFT,14948781);
 		api.start();
 		api.waitForAllDevicesToConnect();
 		while(true)
