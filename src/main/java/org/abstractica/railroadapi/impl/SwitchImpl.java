@@ -52,9 +52,9 @@ public class SwitchImpl implements Switch, DevicePacketHandler, DeviceConnection
 	}
 
 	@Override
-	public boolean identify(int numberOfBlinks) throws InterruptedException
+	public boolean identify(int numberOfBlinks, int seconds) throws InterruptedException
 	{
-		Response response = device.sendPacket(COMMAND_IDENTIFY, numberOfBlinks, 0, null, true, false);
+		Response response = device.sendPacket(COMMAND_IDENTIFY, numberOfBlinks, seconds, 0, 0, null, true, false);
 		if (response == null) return false;
 		return response.getResponse() == 0;
 	}
@@ -63,16 +63,14 @@ public class SwitchImpl implements Switch, DevicePacketHandler, DeviceConnection
 	public boolean switchTo(Side side) throws InterruptedException
 	{
 		int iCmd = side == Side.LEFT ? COMMAND_SWITCH_TO_LEFT : COMMAND_SWITCH_TO_RIGHT;
-		Response response = device.sendPacket(iCmd, 0, 0, null, true, false);
+		Response response = device.sendPacket(iCmd, 0, 0, 0, 0, null, true, false);
 		if (response == null) return false;
 		if(response.getResponse() == 0)
 		{
-			//System.out.println("    " + name + " is now switching to " + side + "!");
 			return true;
 		}
 		else
 		{
-			//System.out.println("    Could not send 'Switch " + side + "' packet to " + name + "!");
 			return false;
 		}
 	}
@@ -92,7 +90,6 @@ public class SwitchImpl implements Switch, DevicePacketHandler, DeviceConnection
 	@Override
 	public void waitFor(Side side) throws InterruptedException
 	{
-		//System.out.println("    Waiting for " + name + " to switch to " + side + "...");
 		waitingForSide = side;
 		synchronized(stateLock)
 		{
@@ -110,13 +107,11 @@ public class SwitchImpl implements Switch, DevicePacketHandler, DeviceConnection
 				}
 			}
 		}
-		//System.out.println("    " + name + " is ready at "+ side +"!");
 	}
 
 	@Override
 	public Side waitForSwitch() throws InterruptedException
 	{
-		//System.out.println("    Waiting for " + name + " to finish switching...");
 		synchronized(stateLock)
 		{
 			while (state != STATE_LEFT && state != STATE_RIGHT)
@@ -124,13 +119,12 @@ public class SwitchImpl implements Switch, DevicePacketHandler, DeviceConnection
 				stateLock.wait();
 			}
 			Side side = state == STATE_LEFT ? Side.LEFT : Side.RIGHT;
-			//System.out.println(name + " is ready at " + side + "!");
 			return side;
 		}
 	}
 
 	@Override
-	public int onPacket(int command, int arg1, int arg2, byte[] load)
+	public int onPacket(int command, int arg1, int arg2, int arg3, int arg4, byte[] load)
 	{
 		if(command == COMMAND_SWITCH_ON_STATE_CHANGE)
 		{
@@ -142,7 +136,6 @@ public class SwitchImpl implements Switch, DevicePacketHandler, DeviceConnection
 
 	private void updateState(int state)
 	{
-		//System.out.println("    Update state: " + state);
 		synchronized(stateLock)
 		{
 			this.state = state;

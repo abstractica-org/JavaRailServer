@@ -18,17 +18,17 @@ public class FirstLocomotiveTest
 		while(true)
 		{
 			System.out.println("Identifying with 2 blinks");
-			loc1.identify(2);
+			loc1.identify(2, 10);
 			System.out.println("Waiting for 5 seconds...");
 			Thread.sleep(5000);
 			System.out.println("Changing direction to Forward!");
-			loc1.waitForTrainToStopAndSetDirection(Locomotive.Direction.FORWARD);
+			loc1.waitForLocomotiveToStopAndSetDirection(Locomotive.Direction.FORWARD);
 			System.out.println("Waiting for 5 seconds...");
 			Thread.sleep(5000);
 			System.out.println("Moving 5 blocks...");
 			loc1.moveAndWait(5);
 			System.out.println("Changing direction to Backward!");
-			loc1.waitForTrainToStopAndSetDirection(Locomotive.Direction.BACKWARD);
+			loc1.waitForLocomotiveToStopAndSetDirection(Locomotive.Direction.BACKWARD);
 			System.out.println("Waiting for 5 seconds...");
 			Thread.sleep(5000);
 			System.out.println("Moving 5 blocks...");

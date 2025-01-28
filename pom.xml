@@ -29,7 +29,7 @@
         <dependency>
             <groupId>com.github.abstractica-org</groupId>
             <artifactId>JavaRemoteDeviceServer</artifactId>
-            <version>v0.2.1</version>
+            <version>v0.3.0</version>
         </dependency>
     </dependencies>
 

@@ -42,9 +42,9 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 	private Collection<DistanceToGoalListener> listeners;
 
 	@Override
-	public boolean identify(int numberOfBlinks) throws InterruptedException
+	public boolean identify(int numberOfBlinks, int seconds) throws InterruptedException
 	{
-		Response response = device.sendPacket(COMMAND_IDENTIFY, numberOfBlinks, 0, null, true, false);
+		Response response = device.sendPacket(COMMAND_IDENTIFY, numberOfBlinks, seconds, 0, 0, null, true, false);
 		if (response == null) return false;
 		return response.getResponse() == 0;
 	}
@@ -69,7 +69,7 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 			isStoppedLock.notifyAll();
 		}
 		dtgOK = false;
-		Response response = device.sendPacket(COMMAND_MOVE, blocks, 0,null, true, false);
+		Response response = device.sendPacket(COMMAND_MOVE, blocks, 0, 0, 0, null, true, false);
 		if(response == null) return false;
 		return response.getResponse() == 0;
 	}
@@ -82,7 +82,7 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 		{
 			waitWhileDistanceToGoalGreaterThan(0);
 		}
-		waitForTrainToStop();
+		waitForLocomotiveToStop();
 		return res;
 	}
 
@@ -93,13 +93,13 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 		{
 			return false;
 		}
-		Response response = device.sendPacket(COMMAND_DIRECTION, direction.ordinal(), 0, null, true, false);
+		Response response = device.sendPacket(COMMAND_DIRECTION, direction.ordinal(), 0, 0, 0, null, true, false);
 		if(response == null) return false;
 		return response.getResponse() == 0;
 	}
 
 	@Override
-	public boolean waitForTrainToStopAndSetDirection(Direction direction) throws InterruptedException
+	public boolean waitForLocomotiveToStopAndSetDirection(Direction direction) throws InterruptedException
 	{
 		synchronized (isStoppedLock)
 		{
@@ -108,7 +108,7 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 				isStoppedLock.wait();
 			}
 		}
-		Response response = device.sendPacket(COMMAND_DIRECTION, direction.ordinal(), 0, null, true, false);
+		Response response = device.sendPacket(COMMAND_DIRECTION, direction.ordinal(), 0, 0, 0, null, true, false);
 		if(response == null) return false;
 		return response.getResponse() == 0;
 	}
@@ -144,7 +144,7 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 	}
 
 	@Override
-	public void waitForTrainToStop() throws InterruptedException
+	public void waitForLocomotiveToStop() throws InterruptedException
 	{
 		synchronized (isStoppedLock)
 		{
@@ -156,7 +156,7 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 	}
 
 	@Override
-	public int onPacket(int command, int arg1, int arg2, byte[] load)
+	public int onPacket(int command, int arg1, int arg2, int arg3, int arg4, byte[] load)
 	{
 		if(command == COMMAND_DISTANCE_TO_GOAL)
 		{

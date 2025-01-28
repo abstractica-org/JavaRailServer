@@ -25,8 +25,8 @@ public class FirstSwitchTest
 			sw1.switchAndWait(Switch.Side.LEFT);
 			System.out.println("done!");
 			Thread.sleep(5000);
-			System.out.println("sw1.identify(2);");
-			sw1.identify(2);
+			System.out.println("sw1.identify(3);");
+			sw1.identify(3, 10);
 			System.out.println("done!");
 			Thread.sleep(5000);
 		}
