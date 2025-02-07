@@ -54,8 +54,11 @@ public class SwitchImpl implements Switch, DevicePacketHandler, DeviceConnection
 	@Override
 	public boolean identify(int numberOfBlinks, int seconds) throws InterruptedException
 	{
-		Response response = device.sendPacket(COMMAND_IDENTIFY, numberOfBlinks, seconds, 0, 0, null, true, false);
-		if (response == null) return false;
+		Response response = null;
+		while(response == null)
+		{
+			response = device.sendPacket(COMMAND_IDENTIFY, numberOfBlinks, seconds, 0, 0, null, true, false);
+		}
 		return response.getResponse() == 0;
 	}
 
@@ -63,16 +66,12 @@ public class SwitchImpl implements Switch, DevicePacketHandler, DeviceConnection
 	public boolean switchTo(Side side) throws InterruptedException
 	{
 		int iCmd = side == Side.LEFT ? COMMAND_SWITCH_TO_LEFT : COMMAND_SWITCH_TO_RIGHT;
-		Response response = device.sendPacket(iCmd, 0, 0, 0, 0, null, true, false);
-		if (response == null) return false;
-		if(response.getResponse() == 0)
+		Response response = null;
+		while(response == null)
 		{
-			return true;
+			response = device.sendPacket(iCmd, 0, 0, 0, 0, null, true, false);
 		}
-		else
-		{
-			return false;
-		}
+		return response.getResponse() == 0;
 	}
 
 	@Override

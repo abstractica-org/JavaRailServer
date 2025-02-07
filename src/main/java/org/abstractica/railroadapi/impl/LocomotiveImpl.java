@@ -44,8 +44,11 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 	@Override
 	public boolean identify(int numberOfBlinks, int seconds) throws InterruptedException
 	{
-		Response response = device.sendPacket(COMMAND_IDENTIFY, numberOfBlinks, seconds, 0, 0, null, true, false);
-		if (response == null) return false;
+		Response response = null;
+		while(response == null)
+		{
+			response = device.sendPacket(COMMAND_IDENTIFY, numberOfBlinks, seconds, 0, 0, null, true, false);
+		}
 		return response.getResponse() == 0;
 	}
 
@@ -69,8 +72,11 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 			isStoppedLock.notifyAll();
 		}
 		dtgOK = false;
-		Response response = device.sendPacket(COMMAND_MOVE, blocks, 0, 0, 0, null, true, false);
-		if(response == null) return false;
+		Response response = null;
+		while(response == null)
+		{
+			response = device.sendPacket(COMMAND_MOVE, blocks, 0, 0, 0, null, true, false);
+		}
 		return response.getResponse() == 0;
 	}
 
@@ -93,8 +99,11 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 		{
 			return false;
 		}
-		Response response = device.sendPacket(COMMAND_DIRECTION, direction.ordinal(), 0, 0, 0, null, true, false);
-		if(response == null) return false;
+		Response response = null;
+		while(response == null)
+		{
+			response = device.sendPacket(COMMAND_DIRECTION, direction.ordinal(), 0, 0, 0, null, true, false);
+		}
 		return response.getResponse() == 0;
 	}
 
@@ -108,8 +117,11 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 				isStoppedLock.wait();
 			}
 		}
-		Response response = device.sendPacket(COMMAND_DIRECTION, direction.ordinal(), 0, 0, 0, null, true, false);
-		if(response == null) return false;
+		Response response = null;
+		while(response == null)
+		{
+			response = device.sendPacket(COMMAND_DIRECTION, direction.ordinal(), 0, 0, 0, null, true, false);
+		}
 		return response.getResponse() == 0;
 	}
 
@@ -158,9 +170,10 @@ public class LocomotiveImpl implements Locomotive, DevicePacketHandler, DeviceCo
 	@Override
 	public int onPacket(int command, int arg1, int arg2, int arg3, int arg4, byte[] load)
 	{
+		System.out.println("Cmd: " + command + " Arg1: " + arg1 + " Arg2: " + arg2 + " Arg3: " + arg3 + " Arg4: " + arg4);
 		if(command == COMMAND_DISTANCE_TO_GOAL)
 		{
-			updateDistanceToGoal(arg1);
+			updateDistanceToGoal(arg2);
 			return 0;
 		}
 		if(command == COMMAND_STOPPED)
